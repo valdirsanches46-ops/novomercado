@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#16a34a">
+    <title>Mercado App</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <style>
+        :root{--P:#16a34a;--PS:#15803d;--BG:#fff;--BG2:#f9fafb;--TX:#1f2937;--TX2:#6b7280;--TX3:#9ca3af;--BD:#e5e7eb;--R:10px;--S:0 4px 14px #0001}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--BG);color:var(--TX);transition:.3s}
+        body.dark{--BG:#0f172a;--BG2:#1e293b;--TX:#f1f5f9;--TX2:#94a3b8;--TX3:#64748b;--BD:#475569}
+        .app{max-width:800px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+        .hd{background:linear-gradient(135deg,var(--P),var(--PS));color:#fff;padding:24px 20px 18px;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px #0002}
+        .hd-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+        .hd h1{font-size:24px}
+        .hd-mercado{font-size:13px;opacity:.9;text-align:center;margin-bottom:12px;cursor:pointer;padding:4px 12px;background:#fff2;border-radius:20px;display:inline-block}
+        .hd-mercado:hover{background:#fff3}
+        .hd-center{text-align:center;margin-bottom:12px}
+        .hd-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+        .hd-btns button{background:#fff3;color:#fff;border:1.5px solid #fffa;padding:7px 14px;border-radius:var(--R);font-size:12px;cursor:pointer;font-weight:600;transition:.2s}
+        .hd-btns button:hover{background:#fff;color:var(--P);transform:translateY(-1px)}
+        .ct{flex:1;padding:20px;overflow-y:auto}
+        .tabs{display:flex;gap:4px;border-bottom:2px solid var(--BD);margin-bottom:18px;overflow-x:auto}
+        .tab{padding:10px 18px;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;font-weight:600;color:var(--TX3);font-size:13px;white-space:nowrap;transition:.2s}
+        .tab.on{color:var(--P);border-bottom-color:var(--P)}
+        .pn{display:none;animation:fadeIn .25s}.pn.on{display:block}
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px}
+        .cd{background:color-mix(in srgb,var(--P) 7%,var(--BG));border:2px solid color-mix(in srgb,var(--P) 20%,transparent);border-radius:var(--R);padding:14px;text-align:center;transition:.2s}
+        .cd:hover{transform:translateY(-3px);box-shadow:var(--S)}
+        .cd-lb{font-size:11px;color:var(--TX2);font-weight:600;margin-bottom:4px}
+        .cd-vl{font-size:19px;color:var(--P);font-weight:700}
+        .bar{background:var(--BD);height:6px;border-radius:3px;overflow:hidden;margin-bottom:18px}
+        .bar-fill{background:var(--P);height:100%;transition:width .4s;border-radius:3px}
+        .fg{margin-bottom:14px}
+        .fg label{display:block;font-weight:600;margin-bottom:4px;font-size:13px}
+        .fg input,.fg select{width:100%;padding:11px 14px;border:2px solid var(--BD);border-radius:var(--R);font-size:14px;background:var(--BG);color:var(--TX);transition:.2s;font-family:inherit}
+        .fg input:focus,.fg select:focus{outline:none;border-color:var(--P);box-shadow:0 0 0 3px color-mix(in srgb,var(--P) 12%,transparent)}
+        .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+        .btn{display:block;width:100%;padding:12px;border:none;border-radius:var(--R);font-size:14px;font-weight:600;cursor:pointer;transition:.2s;color:#fff;background:linear-gradient(135deg,var(--P),var(--PS));font-family:inherit}
+        .btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px color-mix(in srgb,var(--P) 30%,transparent)}
+        .btn:active{transform:translateY(0)}
+        .btn.sec{background:linear-gradient(135deg,#3b82f6,#2563eb)}
+        .btn.del{background:linear-gradient(135deg,#ef4444,#dc2626);width:auto;padding:8px 14px;font-size:12px}
+        .btn.edit{background:linear-gradient(135deg,#f59e0b,#d97706);width:auto;padding:8px 14px;font-size:12px}
+        .btn.sm{padding:8px 14px;font-size:12px;width:auto}
+        .btn.ghost{background:color-mix(in srgb,var(--P) 8%,var(--BG));color:var(--P);border:2px solid color-mix(in srgb,var(--P) 20%,transparent)}
+        .btn.ghost:hover{background:color-mix(in srgb,var(--P) 15%,var(--BG))}
+        .btn.ghost.on{background:var(--P);color:#fff}
+        .cats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+        .quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(85px,1fr));gap:8px;margin-bottom:14px}
+        .quick .btn.ghost{font-size:12px;padding:10px 6px;text-align:center}
+        .list{margin-top:16px;border-top:2px solid var(--BD);padding-top:14px;max-height:600px;overflow-y:auto}
+        .item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--BG2);border-radius:var(--R);margin-bottom:8px;border-left:4px solid var(--P);transition:.2s}
+        .item:hover{transform:translateX(4px);background:color-mix(in srgb,var(--P) 4%,var(--BG))}
+        .item.done{opacity:.5;border-left-color:var(--TX3)}
+        .item.done .i-name{text-decoration:line-through;color:var(--TX3)}
+        .item input[type=checkbox]{width:20px;height:20px;accent-color:var(--P);cursor:pointer;flex-shrink:0}
+        .i-body{flex:1;min-width:0}
+        .i-name{font-weight:600;font-size:14px;margin-bottom:3px}
+        .i-meta{font-size:12px;color:var(--TX2);display:flex;gap:12px;flex-wrap:wrap}
+        .i-total{color:var(--P);font-weight:600}
+        .i-actions{flex-shrink:0;display:flex;gap:6px}
+        .i-sem-preco{color:#f59e0b;font-weight:600;font-size:11px}
+        .empty{text-align:center;padding:40px 20px;color:var(--TX3)}
+        .empty-icon{font-size:48px;margin-bottom:8px}
+        .hl{background:color-mix(in srgb,var(--P) 7%,var(--BG));border:2px solid color-mix(in srgb,var(--P) 20%,transparent);padding:16px;border-radius:var(--R);margin-bottom:14px}
+        .hl h3{color:var(--P);font-size:15px;margin-bottom:4px}
+        .hl p{color:var(--TX2);font-size:13px}
+        .chart-box{background:var(--BG2);padding:16px;border-radius:var(--R);margin-bottom:16px;border:2px solid var(--BD);height:350px}
+        .tbl{width:100%;border-collapse:collapse;margin:14px 0}
+        .tbl th,.tbl td{padding:10px;text-align:left;border-bottom:1px solid var(--BD);font-size:13px}
+        .tbl th{background:color-mix(in srgb,var(--P) 7%,var(--BG));font-weight:600;color:var(--P)}
+        .tbl tr:hover{background:color-mix(in srgb,var(--P) 3%,var(--BG))}
+        .stat{background:var(--BG);border:2px solid var(--BD);padding:14px;border-radius:var(--R);transition:.2s}
+        .stat:hover{transform:translateY(-3px);box-shadow:var(--S)}
+        .stat-lb{color:var(--TX2);font-size:11px;font-weight:600}
+        .stat-vl{color:var(--P);font-size:22px;font-weight:700;margin-top:4px}
+        .rem{background:#fef3c7;border-left:4px solid #f59e0b;padding:12px;border-radius:var(--R);margin-bottom:10px}
+        body.dark .rem{background:#92400e22;border-left-color:#fbbf24}
+        .rem-title{font-weight:600;color:#92400e;margin-bottom:4px}
+        body.dark .rem-title{color:#fbbf24}
+        .rem-text{color:#b45309;font-size:13px}
+        body.dark .rem-text{color:#fcd34d}
+        .toast{position:fixed;top:20px;right:20px;background:var(--BG);color:var(--TX);padding:14px 20px;border-radius:var(--R);box-shadow:0 10px 30px #0003;z-index:3000;animation:slideIn .3s;border-left:4px solid var(--P);max-width:320px;font-size:14px}
+        .toast.err{border-left-color:#ef4444}.toast.warn{border-left-color:#f59e0b}
+        @keyframes slideIn{from{opacity:0;transform:translateX(300px)}to{opacity:1;transform:translateX(0)}}
+        .modal{display:none;position:fixed;inset:0;background:#0005;z-index:2000;align-items:center;justify-content:center}
+        .modal.on{display:flex}
+        .modal-box{background:var(--BG);border-radius:16px;padding:28px;max-width:500px;width:92%;box-shadow:0 20px 60px #0003;max-height:90vh;overflow-y:auto}
+        .modal-title{font-size:18px;font-weight:700;margin-bottom:16px}
+        .modal-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+        .btn.cancel{background:var(--BD)!important;color:var(--TX)!important}
+        .sw{position:relative;display:inline-block;width:44px;height:22px;vertical-align:middle;margin-left:8px}
+        .sw input{opacity:0;width:0;height:0}
+        .sw span{position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:22px;transition:.3s}
+        .sw span::before{content:'';position:absolute;width:16px;height:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+        .sw input:checked+span{background:var(--P)}
+        .sw input:checked+span::before{transform:translateX(22px)}
+        .fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--P),var(--PS));color:#fff;border:none;cursor:pointer;font-size:24px;box-shadow:0 8px 24px color-mix(in srgb,var(--P) 40%,transparent);transition:.3s;display:flex;align-items:center;justify-content:center;z-index:500}
+        .fab:hover{transform:scale(1.1)}
+        .code-box{background:var(--BG2);padding:20px;border-radius:var(--R);text-align:center;margin:16px 0;border:2px dashed var(--BD)}
+        .code-value{font-family:'Courier New',monospace;font-size:32px;font-weight:700;color:var(--P);letter-spacing:6px;margin:10px 0}
+        .list-card{background:var(--BG2);padding:16px;border-radius:var(--R);margin-bottom:10px;border-left:4px solid #3b82f6;transition:.2s}
+        .list-card:hover{transform:translateX(4px);box-shadow:var(--S)}
+        .list-card h4{color:var(--TX);margin-bottom:6px}
+        .list-card p{font-size:12px;color:var(--TX2)}
+        .list-card-btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+        .unit-group{display:flex;gap:0;border:2px solid var(--BD);border-radius:var(--R);overflow:hidden;margin-top:4px}
+        .unit-btn{flex:1;padding:8px;border:none;background:var(--BG);color:var(--TX2);font-size:12px;font-weight:600;cursor:pointer;transition:.2s;font-family:inherit}
+        .unit-btn.on{background:var(--P);color:#fff}
+        .unit-btn:hover:not(.on){background:var(--BG2)}
+        .cat-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--BG2);border-radius:var(--R);margin-bottom:8px;border:2px solid var(--BD)}
+        .cat-item .cat-emoji{font-size:24px;flex-shrink:0}
+        .cat-item .cat-name{flex:1;font-weight:600;font-size:14px}
+        .cat-item .cat-badge{font-size:11px;color:var(--TX3);background:var(--BD);padding:2px 8px;border-radius:10px}
+        .emoji-picker{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;max-height:120px;overflow-y:auto;padding:8px;background:var(--BG2);border-radius:var(--R);border:2px solid var(--BD)}
+        .emoji-opt{font-size:24px;cursor:pointer;padding:4px;border-radius:6px;transition:.2s;border:2px solid transparent}
+        .emoji-opt:hover{background:var(--BD)}
+        .emoji-opt.on{border-color:var(--P);background:color-mix(in srgb,var(--P) 10%,var(--BG))}
+        .export-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+        .mercado-badge{display:inline-flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--P) 10%,var(--BG));border:2px solid color-mix(in srgb,var(--P) 25%,transparent);padding:8px 16px;border-radius:20px;margin-bottom:14px;cursor:pointer;transition:.2s}
+        .mercado-badge:hover{background:color-mix(in srgb,var(--P) 18%,var(--BG))}
+        .mercado-badge .mercado-icon{font-size:18px}
+        .mercado-badge .mercado-text{font-size:13px;font-weight:600;color:var(--P)}
+        @media(max-width:600px){
+            .cards{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr}
+            .item{flex-direction:column;align-items:flex-start}
+            .i-actions{width:100%;justify-content:flex-end}
+            .hd h1{font-size:20px}.chart-box{height:280px}
+            .toast{right:10px;left:10px;max-width:none}
+            .code-value{font-size:24px;letter-spacing:4px}
+            .export-grid{grid-template-columns:1fr}
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="hd">
+        <div class="hd-top"><h1>🛒 Mercado App</h1></div>
+        <div class="hd-center">
+            <div class="hd-mercado" onclick="abrirModal('modalMercado')" id="hdMercado">🏪 Toque para definir o mercado</div>
+        </div>
+        <div class="hd-btns">
+            <button onclick="abrirModal('modalShare')">🔗 Compartilhar</button>
+            <button onclick="abrirModal('modalCategorias')">🏷️ Categorias</button>
+            <button onclick="abrirModal('modalConfig')">⚙️ Config</button>
+            <button onclick="abrirModal('modalExportar')">📁 Exportar</button>
+            <button onclick="abrirModal('modalLimpar')">🗑️ Limpar</button>
+        </div>
+    </div>
+    <div class="ct">
+        <!-- NOME DO MERCADO BADGE -->
+        <div class="mercado-badge" onclick="abrirModal('modalMercado')" id="mercadoBadge" style="display:none">
+            <span class="mercado-icon">🏪</span>
+            <span class="mercado-text" id="mercadoBadgeText"></span>
+        </div>
+
+        <div class="tabs">
+            <button class="tab on" onclick="mudarTab(this,'pnLista')">📝 Lista</button>
+            <button class="tab" onclick="mudarTab(this,'pnCompartilhadas')">🔗 Compartilhadas</button>
+            <button class="tab" onclick="mudarTab(this,'pnGraficos')">📊 Gráficos</button>
+            <button class="tab" onclick="mudarTab(this,'pnRelatorio')">📈 Relatório</button>
+            <button class="tab" onclick="mudarTab(this,'pnLembretes')">🔔 Lembretes</button>
+            <button class="tab" onclick="mudarTab(this,'pnIA')">🤖 IA</button>
+        </div>
+
+        <div class="pn on" id="pnLista">
+            <div class="cards">
+                <div class="cd"><div class="cd-lb">Total</div><div class="cd-vl" id="vTotal">R$ 0</div></div>
+                <div class="cd"><div class="cd-lb">Comprado</div><div class="cd-vl" id="vComp">R$ 0</div></div>
+                <div class="cd"><div class="cd-lb">Itens</div><div class="cd-vl" id="vQtd">0</div></div>
+                <div class="cd"><div class="cd-lb">Economia</div><div class="cd-vl" id="vEcon">R$ 0</div></div>
+            </div>
+            <div class="bar"><div class="bar-fill" id="prog"></div></div>
+            <div class="cats" id="filtros"></div>
+            <div class="hl"><h3>➕ Adicionar Produto</h3></div>
+            <div class="fg"><label>Nome</label><input id="inNome" placeholder="Ex: Leite integral 1L" autocomplete="off"></div>
+            <div class="fg"><label>Categoria</label><select id="inCat"></select></div>
+            <div class="row">
+                <div class="fg"><label>Quantidade</label><input type="number" id="inQtd" value="1" min="0.01" step="0.01" style="text-align:center">
+                    <div class="unit-group" id="unitGroup"><button class="unit-btn on" onclick="setUnit(this,'un')">🔢 Unidade</button><button class="unit-btn" onclick="setUnit(this,'kg')">⚖️ Kg</button></div>
+                </div>
+                <div class="fg"><label>Preço (R$)</label><input type="number" id="inPreco" placeholder="0.00" min="0" step="0.01" style="text-align:center"><div style="font-size:11px;color:var(--TX3);margin-top:4px;text-align:center" id="precoLabel">por unidade</div></div>
+                <div class="fg"><label>Desconto (%)</label><input type="number" id="inDesc" value="0" min="0" max="100" style="text-align:center"></div>
+            </div>
+            <div class="quick">
+                <button class="btn ghost" onclick="addRapido('Leite','Padaria',1,'un',0)">🥛 Leite</button>
+                <button class="btn ghost" onclick="addRapido('Pão','Padaria',1,'un',0)">🍞 Pão</button>
+                <button class="btn ghost" onclick="addRapido('Ovos','Padaria',12,'un',0)">🥚 Ovos</button>
+                <button class="btn ghost" onclick="addRapido('Arroz','Outros',2,'kg',0)">🍚 Arroz</button>
+                <button class="btn ghost" onclick="addRapido('Feijão','Outros',1,'kg',0)">🫘 Feijão</button>
+                <button class="btn ghost" onclick="addRapido('Tomate','Hortifruti',0.5,'kg',0)">🍅 Tomate</button>
+                <button class="btn ghost" onclick="addRapido('Banana','Hortifruti',1,'kg',0)">🍌 Banana</button>
+                <button class="btn ghost" onclick="addRapido('Carne','Carnes',1,'kg',0)">🥩 Carne</button>
+            </div>
+            <button class="btn" onclick="addItem()">➕ Adicionar à lista</button>
+            <div class="list" id="listaEl"></div>
+        </div>
+        <div class="pn" id="pnCompartilhadas">
+            <div class="hl"><h3>🔗 Listas Compartilhadas</h3><p>Código de 6 dígitos.</p></div>
+            <div class="fg"><label>Entrar em lista</label><input id="inCodigoEntrar" placeholder="ABC123" maxlength="6" style="text-transform:uppercase;text-align:center;font-size:20px;letter-spacing:4px"></div>
+            <button class="btn sec" onclick="importarListaPorCodigo()" style="margin-bottom:20px">🔓 Importar</button>
+            <h4 style="margin-bottom:10px">📋 Suas listas</h4><div id="listaCompartilhadas"></div>
+        </div>
+        <div class="pn" id="pnGraficos">
+            <div class="hl"><h3>📊 Análise Visual</h3></div>
+            <h4 style="margin-bottom:8px">💰 Por Categoria</h4><div class="chart-box"><canvas id="chCat"></canvas></div>
+            <h4 style="margin-bottom:8px">📈 Progresso</h4><div class="chart-box"><canvas id="chProg"></canvas></div>
+            <h4 style="margin-bottom:8px">🎯 Conclusão</h4><div class="chart-box"><canvas id="chStat"></canvas></div>
+        </div>
+        <div class="pn" id="pnRelatorio">
+            <div class="hl"><h3>📈 Relatório</h3></div>
+            <div class="cards" id="statsCards"></div>
+            <h4 style="margin:16px 0 8px">📋 Por Categoria</h4>
+            <table class="tbl"><thead><tr><th>Categoria</th><th>Itens</th><th>Total</th><th>Comprado</th></tr></thead><tbody id="tblCat"></tbody></table>
+        </div>
+        <div class="pn" id="pnLembretes">
+            <div class="hl"><h3>🔔 Lembretes</h3></div>
+            <div class="fg"><label>Texto</label><input id="inLemb" placeholder="Comprar leite domingo"></div>
+            <div class="fg"><label>Data/Hora</label><input type="datetime-local" id="inDataLemb"></div>
+            <button class="btn" onclick="addLembrete()">➕ Criar</button>
+            <div id="lembList" style="margin-top:14px"></div>
+        </div>
+        <div class="pn" id="pnIA">
+            <div class="hl"><h3>🤖 IA</h3><p>Sugestões inteligentes</p></div>
+            <div id="iaSug" style="margin-bottom:14px"></div>
+            <h4 style="margin-bottom:8px">⚡ Ações</h4>
+            <button class="btn sec" onclick="marcarTodos()" style="margin-bottom:8px">✅ Marcar tudo</button>
+            <button class="btn del" onclick="removerComprados()" style="width:100%;margin-bottom:8px">🗑️ Remover comprados</button>
+            <button class="btn sec" onclick="addFrequentes()" style="margin-bottom:8px">🔁 Itens frequentes</button>
+            <button class="btn sec" onclick="removerDuplicatas()">⚡ Remover duplicatas</button>
+        </div>
+    </div>
+</div>
+<button class="fab" onclick="document.getElementById('inNome').focus();document.getElementById('inNome').scrollIntoView({behavior:'smooth'})">➕</button>
+
+<!-- MODAIS -->
+<div class="modal" id="modalDel"><div class="modal-box"><div class="modal-title">🗑️ Remover?</div><p>Tem certeza?</p><div class="modal-btns"><button class="btn cancel" onclick="fecharModal('modalDel')">Cancelar</button><button class="btn del" style="width:100%" onclick="confirmarRemover()">Remover</button></div></div></div>
+
+<!-- NOME DO MERCADO -->
+<div class="modal" id="modalMercado"><div class="modal-box">
+    <div class="modal-title">🏪 Nome do Mercado</div>
+    <p style="color:var(--TX2);font-size:13px;margin-bottom:14px">Defina onde você vai fazer as compras. Aparece no header, exportações e impressões.</p>
+    <div class="fg"><label>Nome do mercado / supermercado</label><input id="inMercadoNome" placeholder="Ex: Supermercado Extra, Atacadão, Pão de Açúcar..."></div>
+    <div class="fg"><label>Endereço (opcional)</label><input id="inMercadoEnd" placeholder="Ex: Rua das Flores, 123"></div>
+    <div class="modal-btns">
+        <button class="btn cancel" onclick="fecharModal('modalMercado')">Cancelar</button>
+        <button class="btn" onclick="salvarMercado()">💾 Salvar</button>
+    </div>
+    <button class="btn del" onclick="limparMercado()" style="width:100%;margin-top:10px">🗑️ Remover mercado</button>
+</div></div>
+
+<div class="modal" id="modalEditar"><div class="modal-box"><div class="modal-title">✏️ Editar Produto</div>
+    <div class="fg"><label>Nome</label><input id="editNome"></div>
+    <div class="fg"><label>Categoria</label><select id="editCat"></select></div>
+    <div class="row">
+        <div class="fg"><label>Qtd</label><input type="number" id="editQtd" min="0.01" step="0.01" style="text-align:center"><div class="unit-group" id="editUnitGroup"><button class="unit-btn on" onclick="setEditUnit(this,'un')">🔢 Unidade</button><button class="unit-btn" onclick="setEditUnit(this,'kg')">⚖️ Kg</button></div></div>
+        <div class="fg"><label>Preço</label><input type="number" id="editPreco" min="0" step="0.01" style="text-align:center"><div style="font-size:11px;color:var(--TX3);margin-top:4px;text-align:center" id="editPrecoLabel">por unidade</div></div>
+        <div class="fg"><label>Desconto</label><input type="number" id="editDesc" min="0" max="100" style="text-align:center"></div>
+    </div>
+    <div class="modal-btns"><button class="btn cancel" onclick="fecharModal('modalEditar')">Cancelar</button><button class="btn" onclick="salvarEdicao()">💾 Salvar</button></div>
+</div></div>
+
+<div class="modal" id="modalCategorias"><div class="modal-box">
+    <div class="modal-title">🏷️ Categorias</div>
+    <div class="hl"><h3>➕ Nova</h3></div>
+    <div class="fg"><label>Emoji</label><div class="emoji-picker" id="emojiPicker"></div><input id="inCatEmoji" placeholder="Ou digite" maxlength="2" style="text-align:center;font-size:24px;margin-top:8px"></div>
+    <div class="fg"><label>Nome</label><input id="inCatNome" placeholder="Ex: Pet Shop"></div>
+    <button class="btn" onclick="addCategoria()" style="margin-bottom:20px">➕ Adicionar</button>
+    <h4 style="margin-bottom:10px">📋 Suas categorias</h4><div id="catList"></div>
+    <div class="modal-btns"><button class="btn cancel" onclick="fecharModal('modalCategorias')" style="grid-column:1/-1">Fechar</button></div>
+</div></div>
+
+<div class="modal" id="modalEditCat"><div class="modal-box">
+    <div class="modal-title">✏️ Editar Categoria</div>
+    <div class="fg"><label>Emoji</label><div class="emoji-picker" id="emojiPickerEdit"></div><input id="editCatEmoji" maxlength="2" style="text-align:center;font-size:24px;margin-top:8px"></div>
+    <div class="fg"><label>Nome</label><input id="editCatNome"></div>
+    <div class="modal-btns"><button class="btn cancel" onclick="fecharModal('modalEditCat')">Cancelar</button><button class="btn" onclick="salvarEditCategoria()">💾 Salvar</button></div>
+</div></div>
+
+<div class="modal" id="modalShare"><div class="modal-box"><div class="modal-title">🔗 Compartilhar</div>
+    <div class="fg"><label>Nome da lista</label><input id="inShareNome" placeholder="Compras da semana"></div>
+    <button class="btn" onclick="gerarListaCompartilhada()">📤 Gerar código</button>
+    <div class="code-box" id="codeBox" style="display:none"><div style="font-size:12px;color:var(--TX2)">Código:</div><div class="code-value" id="codeValue">------</div><button class="btn sec" onclick="copiarCodigo()" style="margin-top:12px">📋 Copiar</button></div>
+    <div class="modal-btns"><button class="btn cancel" onclick="fecharModal('modalShare')" style="grid-column:1/-1">Fechar</button></div>
+</div></div>
+
+<div class="modal" id="modalConfig"><div class="modal-box"><div class="modal-title">⚙️ Config</div>
+    <div class="fg"><label>🎨 Tema</label><select id="selTema" onchange="mudarTema(this.value)"><option value="#16a34a">🟢 Verde</option><option value="#3b82f6">🔵 Azul</option><option value="#8b5cf6">🟣 Roxo</option><option value="#ef4444">🔴 Vermelho</option><option value="#f59e0b">🟠 Laranja</option><option value="#ec4899">🩷 Rosa</option></select></div>
+    <div class="fg"><label>🌙 Escuro <label class="sw"><input type="checkbox" id="chkDark" onchange="toggleDark()"><span></span></label></label></div>
+    <button class="btn cancel" onclick="fecharModal('modalConfig')" style="margin-top:10px">Fechar</button>
+</div></div>
+
+<div class="modal" id="modalExportar"><div class="modal-box">
+    <div class="modal-title">📁 Exportar / Importar</div>
+    <div class="hl"><h3>📤 Exportar</h3></div>
+    <div class="export-grid">
+        <button class="btn sec" onclick="exportCSV()">📋 CSV</button>
+        <button class="btn sec" onclick="exportJSON()">📥 JSON</button>
+        <button class="btn sec" onclick="exportTXT()">📝 TXT</button>
+        <button class="btn sec" onclick="exportPDF()">📄 PDF</button>
+    </div>
+    <button class="btn sec" onclick="imprimirLista()" style="margin-bottom:16px">🖨️ Imprimir</button>
+    <div class="hl"><h3>📥 Importar</h3></div>
+    <label style="display:block;padding:12px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:var(--R);text-align:center;cursor:pointer;font-weight:600;margin-bottom:8px">📤 Importar JSON<input type="file" accept=".json" onchange="importJSON(event)" style="display:none"></label>
+    <button class="btn cancel" onclick="fecharModal('modalExportar')">Fechar</button>
+</div></div>
+
+<div class="modal" id="modalLimpar"><div class="modal-box"><div class="modal-title">🗑️ Limpar</div>
+    <button class="btn del" onclick="limparComprados()" style="width:100%;margin-bottom:8px">🗑️ Comprados</button>
+    <button class="btn del" onclick="limparLista()" style="width:100%;margin-bottom:8px">📝 Lista</button>
+    <button class="btn del" onclick="limparTudo()" style="width:100%;margin-bottom:8px">💣 TUDO</button>
+    <button class="btn cancel" onclick="fecharModal('modalLimpar')" style="margin-top:8px">Cancelar</button>
+</div></div>
+
+<script>
+const EMOJI_OPTIONS=['🥬','🥩','🍞','🥤','🧹','🧴','🧊','📦','🐶','🐱','💊','🏥','👶','🧸','🎮','💻','📱','🔧','🏠','🌺','🎂','🍫','🍕','🍔','🥗','🧀','🍺','🍷','☕','🧃','🥜','🌽','🍿','🥫','🫒','🧈','🥣','🫧','🪥','🧻','💡','🔋','🪴','🐟','🦐'];
+let categoriasDefault=[{nome:'Hortifruti',emoji:'🥬',padrao:true},{nome:'Carnes',emoji:'🥩',padrao:true},{nome:'Padaria',emoji:'🍞',padrao:true},{nome:'Bebidas',emoji:'🥤',padrao:true},{nome:'Limpeza',emoji:'🧹',padrao:true},{nome:'Higiene',emoji:'🧴',padrao:true},{nome:'Congelados',emoji:'🧊',padrao:true},{nome:'Outros',emoji:'📦',padrao:true}];
+let categorias=[],itens=[],lembretes=[],compartilhadas=[],filtro='Todos',delId=null,editId=null,editCatId=null,charts={};
+let unidadeAtual='un',editUnidadeAtual='un',emojiSelecionado='📦',emojiEditSelecionado='📦';
+let mercado={nome:'',endereco:''};
+
+// MERCADO
+function carregarMercado(){
+    const s=localStorage.getItem('mercado_mercado');
+    if(s) mercado=JSON.parse(s);
+    else mercado={nome:'',endereco:''};
+    atualizarMercadoUI();
+}
+
+function salvarMercadoStorage(){
+    localStorage.setItem('mercado_mercado',JSON.stringify(mercado));
+}
+
+function salvarMercado(){
+    mercado.nome=document.getElementById('inMercadoNome').value.trim();
+    mercado.endereco=document.getElementById('inMercadoEnd').value.trim();
+    salvarMercadoStorage();
+    atualizarMercadoUI();
+    fecharModal('modalMercado');
+    toast(mercado.nome?'🏪 Mercado: '+mercado.nome:'🏪 Mercado salvo!');
+}
+
+function limparMercado(){
+    mercado={nome:'',endereco:''};
+    salvarMercadoStorage();
+    atualizarMercadoUI();
+    fecharModal('modalMercado');
+    toast('🗑️ Mercado removido!');
+}
+
+function atualizarMercadoUI(){
+    const hd=document.getElementById('hdMercado');
+    const badge=document.getElementById('mercadoBadge');
+    const badgeText=document.getElementById('mercadoBadgeText');
+    if(mercado.nome){
+        hd.textContent='🏪 '+mercado.nome+(mercado.endereco?' · '+mercado.endereco:'');
+        badge.style.display='inline-flex';
+        badgeText.textContent=mercado.nome+(mercado.endereco?' — '+mercado.endereco:'');
+    }else{
+        hd.textContent='🏪 Toque para definir o mercado';
+        badge.style.display='none';
+    }
+}
+
+function getMercadoTexto(){
+    if(!mercado.nome) return '';
+    return mercado.nome+(mercado.endereco?' — '+mercado.endereco:'');
+}
+
+// CATEGORIAS
+function carregarCategorias(){const s=localStorage.getItem('mercado_categorias');if(s)categorias=JSON.parse(s);else categorias=JSON.parse(JSON.stringify(categoriasDefault))}
+function salvarCategorias(){localStorage.setItem('mercado_categorias',JSON.stringify(categorias))}
+function getCatEmoji(n){const c=categorias.find(x=>x.nome===n);return c?c.emoji:'📦'}
+function getCatNomes(){return categorias.map(c=>c.nome)}
+function atualizarSelects(){const o=categorias.map(c=>`<option value="${c.nome}">${c.emoji} ${c.nome}</option>`).join('');document.getElementById('inCat').innerHTML=o;document.getElementById('editCat').innerHTML=o}
+function renderEmojiPicker(id,fn){document.getElementById(id).innerHTML=EMOJI_OPTIONS.map(e=>`<span class="emoji-opt" onclick="${fn}('${e}',this)">${e}</span>`).join('')}
+function selecionarEmoji(e,b){emojiSelecionado=e;document.getElementById('inCatEmoji').value=e;document.querySelectorAll('#emojiPicker .emoji-opt').forEach(x=>x.classList.remove('on'));b.classList.add('on')}
+function selecionarEmojiEdit(e,b){emojiEditSelecionado=e;document.getElementById('editCatEmoji').value=e;document.querySelectorAll('#emojiPickerEdit .emoji-opt').forEach(x=>x.classList.remove('on'));b.classList.add('on')}
+function addCategoria(){const n=document.getElementById('inCatNome').value.trim(),e=document.getElementById('inCatEmoji').value.trim()||emojiSelecionado||'📦';if(!n)return toast('Nome!','err');if(categorias.find(c=>c.nome.toLowerCase()===n.toLowerCase()))return toast('Existe!','err');categorias.push({nome:n,emoji:e,padrao:false});salvarCategorias();atualizarSelects();renderCatList();render();document.getElementById('inCatNome').value='';document.getElementById('inCatEmoji').value='';document.querySelectorAll('#emojiPicker .emoji-opt').forEach(b=>b.classList.remove('on'));toast('✅ '+e+' '+n+'!')}
+function abrirEditCategoria(n){const c=categorias.find(x=>x.nome===n);if(!c)return;editCatId=n;emojiEditSelecionado=c.emoji;document.getElementById('editCatEmoji').value=c.emoji;document.getElementById('editCatNome').value=c.nome;renderEmojiPicker('emojiPickerEdit','selecionarEmojiEdit');setTimeout(()=>{document.querySelectorAll('#emojiPickerEdit .emoji-opt').forEach(b=>{if(b.textContent===c.emoji)b.classList.add('on')})},50);abrirModal('modalEditCat')}
+function salvarEditCategoria(){if(!editCatId)return;const n=document.getElementById('editCatNome').value.trim(),e=document.getElementById('editCatEmoji').value.trim()||emojiEditSelecionado||'📦';if(!n)return toast('Nome!','err');if(categorias.find(c=>c.nome.toLowerCase()===n.toLowerCase()&&c.nome!==editCatId))return toast('Existe!','err');itens.forEach(i=>{if(i.categoria===editCatId)i.categoria=n});const c=categorias.find(x=>x.nome===editCatId);if(c){c.nome=n;c.emoji=e}salvarCategorias();salvar();atualizarSelects();renderCatList();render();fecharModal('modalEditCat');toast('✅!');editCatId=null}
+function excluirCategoria(n){const c=categorias.find(x=>x.nome===n);if(!c)return;const q=itens.filter(i=>i.categoria===n).length;if(!confirm('Excluir "'+c.emoji+' '+n+'"?'+(q>0?'\n'+q+' itens → Outros':'')))return;itens.forEach(i=>{if(i.categoria===n)i.categoria='Outros'});categorias=categorias.filter(x=>x.nome!==n);if(!categorias.find(x=>x.nome==='Outros'))categorias.push({nome:'Outros',emoji:'📦',padrao:true});if(filtro===n)filtro='Todos';salvarCategorias();salvar();atualizarSelects();renderCatList();render();toast('🗑️!')}
+function restaurarCategorias(){if(!confirm('Restaurar?'))return;const nd=categoriasDefault.map(c=>c.nome);itens.forEach(i=>{if(!nd.includes(i.categoria))i.categoria='Outros'});categorias=JSON.parse(JSON.stringify(categoriasDefault));filtro='Todos';salvarCategorias();salvar();atualizarSelects();renderCatList();render();toast('🔄!')}
+function renderCatList(){const el=document.getElementById('catList');el.innerHTML=categorias.map(c=>{const q=itens.filter(i=>i.categoria===c.nome).length;return`<div class="cat-item"><span class="cat-emoji">${c.emoji}</span><span class="cat-name">${c.nome}</span><span class="cat-badge">${q}</span><button class="btn edit" onclick="abrirEditCategoria('${c.nome}')">✏️</button><button class="btn del" onclick="excluirCategoria('${c.nome}')">🗑️</button></div>`}).join('');el.innerHTML+=`<button class="btn ghost" onclick="restaurarCategorias()" style="margin-top:10px">🔄 Restaurar</button>`}
+
+// UNIDADE
+function setUnit(b,u){unidadeAtual=u;document.querySelectorAll('#unitGroup .unit-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');const q=document.getElementById('inQtd'),l=document.getElementById('precoLabel');if(u==='kg'){q.step='0.01';q.min='0.01';q.value='1.00';l.textContent='por kg'}else{q.step='1';q.min='1';q.value='1';l.textContent='por unidade'}}
+function setEditUnit(b,u){editUnidadeAtual=u;document.querySelectorAll('#editUnitGroup .unit-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');const q=document.getElementById('editQtd'),l=document.getElementById('editPrecoLabel');if(u==='kg'){q.step='0.01';q.min='0.01';l.textContent='por kg'}else{q.step='1';q.min='1';l.textContent='por unidade'}}
+function formatQtd(q,u){if(u==='kg'){if(q>=1)return q%1===0?q+'kg':q.toFixed(2)+'kg';return(q*1000).toFixed(0)+'g'}return q+' un'}
+
+// STORAGE
+function salvar(){localStorage.setItem('mercado_itens',JSON.stringify(itens));localStorage.setItem('mercado_lembretes',JSON.stringify(lembretes));localStorage.setItem('mercado_compartilhadas',JSON.stringify(compartilhadas))}
+function carregar(){try{itens=JSON.parse(localStorage.getItem('mercado_itens'))||[];lembretes=JSON.parse(localStorage.getItem('mercado_lembretes'))||[];compartilhadas=JSON.parse(localStorage.getItem('mercado_compartilhadas'))||[]}catch(e){itens=[];lembretes=[];compartilhadas=[]}itens.forEach(i=>{if(!i.unidade)i.unidade='un'})}
+
+// EDITAR ITEM
+function abrirEdicao(id){const item=itens.find(i=>i.id===id);if(!item)return;editId=id;editUnidadeAtual=item.unidade||'un';document.getElementById('editNome').value=item.nome;document.getElementById('editCat').value=item.categoria;document.getElementById('editQtd').value=item.quantidade;document.getElementById('editPreco').value=item.preco;document.getElementById('editDesc').value=item.desconto||0;document.querySelectorAll('#editUnitGroup .unit-btn').forEach(b=>{b.classList.remove('on');if((editUnidadeAtual==='kg'&&b.textContent.includes('Kg'))||(editUnidadeAtual==='un'&&b.textContent.includes('Unidade')))b.classList.add('on')});document.getElementById('editPrecoLabel').textContent=editUnidadeAtual==='kg'?'por kg':'por unidade';const q=document.getElementById('editQtd');if(editUnidadeAtual==='kg'){q.step='0.01';q.min='0.01'}else{q.step='1';q.min='1'}abrirModal('modalEditar')}
+function salvarEdicao(){if(!editId)return;const item=itens.find(i=>i.id===editId);if(!item)return;const n=document.getElementById('editNome').value.trim();if(!n)return toast('Nome!','err');item.nome=n;item.categoria=document.getElementById('editCat').value;item.quantidade=parseFloat(document.getElementById('editQtd').value)||1;item.preco=parseFloat(document.getElementById('editPreco').value)||0;item.desconto=parseFloat(document.getElementById('editDesc').value)||0;item.precoFinal=item.preco*(1-item.desconto/100);item.unidade=editUnidadeAtual;salvar();render();fecharModal('modalEditar');toast('✅!');editId=null}
+
+// COMPARTILHAMENTO
+function gerarCodigo(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:6},()=>c[Math.random()*c.length|0]).join('')}
+function gerarListaCompartilhada(){const n=document.getElementById('inShareNome').value.trim();if(!n)return toast('Nome!','err');if(!itens.length)return toast('Vazia!','err');const c=gerarCodigo();compartilhadas.unshift({id:Date.now(),nome:n,codigo:c,mercado:mercado.nome||'',itens:JSON.parse(JSON.stringify(itens)),data:new Date().toLocaleString('pt-BR')});salvar();renderCompartilhadas();document.getElementById('codeBox').style.display='block';document.getElementById('codeValue').textContent=c;toast('✅ Código: '+c)}
+function copiarCodigo(){const c=document.getElementById('codeValue').textContent;navigator.clipboard.writeText(c).then(()=>toast('📋!')).catch(()=>{const i=document.createElement('input');i.value=c;document.body.appendChild(i);i.select();document.execCommand('copy');document.body.removeChild(i);toast('📋!')})}
+function importarListaPorCodigo(){const c=document.getElementById('inCodigoEntrar').value.trim().toUpperCase();if(!c||c.length!==6)return toast('6 caracteres!','err');const l=compartilhadas.find(x=>x.codigo===c);if(!l)return toast('Não encontrado!','err');if(confirm('Importar "'+l.nome+'"?')){let n=0;l.itens.forEach(item=>{itens.unshift({...item,id:Date.now()+Math.random(),comprado:false});n++});salvar();render();document.getElementById('inCodigoEntrar').value='';toast('✅ '+n+'!')}}
+function copiarCodigoLista(c){navigator.clipboard.writeText(c).then(()=>toast('📋!'))}
+function carregarListaCompartilhada(id){const l=compartilhadas.find(x=>x.id===id);if(!l)return;if(confirm('Carregar? Substitui.')){itens=JSON.parse(JSON.stringify(l.itens));itens.forEach(i=>{i.id=Date.now()+Math.random();i.comprado=false;if(!i.unidade)i.unidade='un'});salvar();render();toast('✅!')}}
+function excluirListaCompartilhada(id){if(!confirm('Excluir?'))return;compartilhadas=compartilhadas.filter(x=>x.id!==id);salvar();renderCompartilhadas();toast('🗑️!')}
+function renderCompartilhadas(){const el=document.getElementById('listaCompartilhadas');if(!compartilhadas.length){el.innerHTML='<div class="empty"><div class="empty-icon">🔗</div>Nenhuma</div>';return}el.innerHTML=compartilhadas.map(l=>`<div class="list-card"><h4>${esc(l.nome)}</h4><p>📅 ${l.data} · ${l.itens.length} itens · <strong>${l.codigo}</strong>${l.mercado?' · 🏪 '+esc(l.mercado):''}</p><div class="list-card-btns"><button class="btn sm sec" onclick="copiarCodigoLista('${l.codigo}')">📋</button><button class="btn sm ghost" onclick="carregarListaCompartilhada(${l.id})">📥</button><button class="btn del" onclick="excluirListaCompartilhada(${l.id})">🗑️</button></div></div>`).join('')}
+
+// ITENS
+function addItem(){const n=document.getElementById('inNome').value.trim();if(!n)return toast('Nome!','err');const cat=document.getElementById('inCat').value,qtd=parseFloat(document.getElementById('inQtd').value)||1,preco=parseFloat(document.getElementById('inPreco').value)||0,desc=parseFloat(document.getElementById('inDesc').value)||0;itens.unshift({id:Date.now(),nome:n,categoria:cat,quantidade:qtd,unidade:unidadeAtual,preco,desconto:desc,precoFinal:preco*(1-desc/100),comprado:false,data:new Date().toLocaleString('pt-BR')});salvar();render();document.getElementById('inNome').value='';document.getElementById('inQtd').value=unidadeAtual==='kg'?'1.00':'1';document.getElementById('inPreco').value='';document.getElementById('inDesc').value='0';document.getElementById('inNome').focus();toast('✅ "'+n+'"!')}
+function addRapido(n,cat,qtd,unit,preco){itens.unshift({id:Date.now()+Math.random(),nome:n,categoria:cat,quantidade:qtd,unidade:unit,preco,desconto:0,precoFinal:preco,comprado:false,data:new Date().toLocaleString('pt-BR')});salvar();render();toast('✅ "'+n+'"!')}
+function toggleItem(id){const i=itens.find(x=>x.id===id);if(i)i.comprado=!i.comprado;salvar();render()}
+function pedirRemover(id){delId=id;abrirModal('modalDel')}
+function confirmarRemover(){if(delId){itens=itens.filter(x=>x.id!==delId);salvar();render();fecharModal('modalDel');toast('🗑️!');delId=null}}
+function marcarTodos(){itens.forEach(i=>i.comprado=true);salvar();render();toast('✅!')}
+function removerComprados(){if(!confirm('Remover?'))return;const n=itens.filter(i=>i.comprado).length;itens=itens.filter(i=>!i.comprado);salvar();render();toast('🗑️ '+n+'!')}
+function addFrequentes(){const freq=[{nome:'Leite',categoria:'Padaria',quantidade:1,unidade:'un'},{nome:'Pão',categoria:'Padaria',quantidade:1,unidade:'un'},{nome:'Ovos',categoria:'Padaria',quantidade:12,unidade:'un'},{nome:'Arroz',categoria:'Outros',quantidade:2,unidade:'kg'},{nome:'Feijão',categoria:'Outros',quantidade:1,unidade:'kg'},{nome:'Açúcar',categoria:'Outros',quantidade:1,unidade:'kg'},{nome:'Café',categoria:'Outros',quantidade:1,unidade:'un'},{nome:'Óleo',categoria:'Outros',quantidade:1,unidade:'un'},{nome:'Manteiga',categoria:'Padaria',quantidade:1,unidade:'un'},{nome:'Queijo',categoria:'Padaria',quantidade:0.5,unidade:'kg'},{nome:'Tomate',categoria:'Hortifruti',quantidade:0.5,unidade:'kg'},{nome:'Cebola',categoria:'Hortifruti',quantidade:0.5,unidade:'kg'},{nome:'Alho',categoria:'Hortifruti',quantidade:1,unidade:'un'},{nome:'Banana',categoria:'Hortifruti',quantidade:1,unidade:'kg'},{nome:'Maçã',categoria:'Hortifruti',quantidade:1,unidade:'kg'}];let n=0;freq.forEach(f=>{if(!itens.find(i=>i.nome.toLowerCase()===f.nome.toLowerCase())){itens.unshift({id:Date.now()+Math.random(),...f,preco:0,desconto:0,precoFinal:0,comprado:false,data:new Date().toLocaleString('pt-BR')});n++}});salvar();render();toast('🔁 '+n+'!')}
+function removerDuplicatas(){const nomes=new Set();const antes=itens.length;itens=itens.filter(i=>{const c=i.nome.toLowerCase();if(nomes.has(c))return false;nomes.add(c);return true});salvar();render();toast('⚡ '+(antes-itens.length)+'!')}
+
+// LEMBRETES
+function addLembrete(){const t=document.getElementById('inLemb').value.trim();if(!t)return toast('Digite!','err');lembretes.unshift({id:Date.now(),texto:t,data:document.getElementById('inDataLemb').value||new Date().toISOString()});salvar();renderLembretes();document.getElementById('inLemb').value='';document.getElementById('inDataLemb').value='';toast('🔔!')}
+function delLembrete(id){lembretes=lembretes.filter(l=>l.id!==id);salvar();renderLembretes();toast('🗑️!')}
+function renderLembretes(){const el=document.getElementById('lembList');if(!lembretes.length){el.innerHTML='<div class="empty"><div class="empty-icon">🔔</div>Nenhum</div>';return}el.innerHTML=lembretes.map(l=>`<div class="rem"><div class="rem-title">${esc(l.texto)}</div><div class="rem-text">📅 ${new Date(l.data).toLocaleString('pt-BR')}</div><button class="btn del" onclick="delLembrete(${l.id})" style="margin-top:8px">🗑️</button></div>`).join('')}
+function verificarLembretes(){const agora=new Date();lembretes.forEach(l=>{if(new Date(l.data)<=agora)toast('🔔 '+l.texto,'warn')})}
+
+// LIMPAR
+function limparComprados(){const n=itens.filter(i=>i.comprado).length;itens=itens.filter(i=>!i.comprado);salvar();render();fecharModal('modalLimpar');toast('🗑️ '+n+'!')}
+function limparLista(){if(!confirm('Limpar?'))return;itens=[];salvar();render();fecharModal('modalLimpar');toast('📝!')}
+function limparTudo(){if(!confirm('⚠️ TUDO?'))return;itens=[];lembretes=[];compartilhadas=[];mercado={nome:'',endereco:''};localStorage.clear();atualizarMercadoUI();render();renderLembretes();renderCompartilhadas();fecharModal('modalLimpar');toast('💣!')}
+
+// EXPORTAR
+function gerarTextoLista(){const{total,comprado,economia}=calcular();const catA={};itens.forEach(i=>{(catA[i.categoria]||(catA[i.categoria]=[])).push(i)});const data=new Date().toLocaleString('pt-BR');const m=getMercadoTexto();let txt='========================================\n';txt+='        LISTA DE COMPRAS\n';if(m)txt+='        🏪 '+m+'\n';txt+='========================================\n';txt+='Data: '+data+'\n\n';txt+='RESUMO:\n';txt+='  Total:     '+moeda(total)+'\n';txt+='  Gastei:    '+moeda(comprado)+'\n';txt+='  Falta:     '+moeda(total-comprado)+'\n';txt+='  Economia:  '+moeda(economia)+'\n';txt+='  Itens:     '+itens.length+'\n';txt+='  Comprados: '+itens.filter(i=>i.comprado).length+'\n';txt+='========================================\n\n';for(let cat in catA){txt+=getCatEmoji(cat)+' '+cat.toUpperCase()+'\n';txt+='----------------------------------------\n';catA[cat].forEach(i=>{const s=i.comprado?'[✓]':'[ ]';const u=i.unidade||'un';const q=formatQtd(i.quantidade,u);if(i.preco>0){const p=u==='kg'?'/kg':'/un';const t=i.quantidade*(i.precoFinal||i.preco);const d=i.desconto>0?' (-'+i.desconto+'%)':'';txt+=s+' '+i.nome+' — '+q+' x R$ '+(i.preco).toFixed(2)+p+d+' = '+moeda(t)+'\n'}else{txt+=s+' '+i.nome+' — '+q+' (sem preço)\n'}});txt+='\n'}if(!Object.keys(catA).length)txt+='(lista vazia)\n';txt+='========================================\n';txt+='Mercado App';if(m)txt+=' · '+m;txt+='\n';return txt}
+
+function exportTXT(){baixar(gerarTextoLista(),'lista-'+Date.now()+'.txt','text/plain');toast('📝 TXT!');fecharModal('modalExportar')}
+
+function exportPDF(){const{total,comprado,economia}=calcular();const catA={};itens.forEach(i=>{(catA[i.categoria]||(catA[i.categoria]=[])).push(i)});const data=new Date().toLocaleString('pt-BR');const m=getMercadoTexto();let html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Lista</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;padding:30px;color:#1f2937;font-size:12px}h1{text-align:center;color:#16a34a;font-size:22px;margin-bottom:4px}.mercado{text-align:center;color:#6b7280;font-size:13px;margin-bottom:4px}.subtitle{text-align:center;color:#9ca3af;font-size:11px;margin-bottom:20px}.resumo{display:flex;justify-content:space-around;background:#f0fdf4;padding:14px;border-radius:8px;margin-bottom:20px;border:1px solid #86efac}.resumo-item{text-align:center}.resumo-label{font-size:10px;color:#6b7280;font-weight:bold}.resumo-valor{font-size:16px;color:#16a34a;font-weight:bold}.categoria{margin-bottom:16px;page-break-inside:avoid}.categoria h2{font-size:14px;color:#16a34a;border-bottom:2px solid #86efac;padding-bottom:6px;margin-bottom:8px}.item{display:flex;align-items:center;padding:6px 0;border-bottom:1px solid #e5e7eb}.item:last-child{border-bottom:none}.item.done{opacity:0.5}.item.done .item-nome{text-decoration:line-through}.check{width:14px;height:14px;border:2px solid #16a34a;border-radius:3px;margin-right:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px}.check.checked{background:#16a34a;color:#fff}.item-nome{flex:1;font-weight:600;font-size:12px}.item-info{color:#6b7280;font-size:11px;text-align:right}.item-total{color:#16a34a;font-weight:bold;font-size:12px;text-align:right;min-width:80px}.sem-preco{color:#f59e0b;font-size:11px}.footer{text-align:center;color:#9ca3af;font-size:10px;margin-top:20px;padding-top:10px;border-top:1px solid #e5e7eb}@media print{body{padding:15px}@page{margin:15mm}}</style></head><body>`;
+    html+=`<h1>🛒 Lista de Compras</h1>`;
+    if(m) html+=`<div class="mercado">🏪 ${m}</div>`;
+    html+=`<div class="subtitle">${data}</div>`;
+    html+=`<div class="resumo"><div class="resumo-item"><div class="resumo-label">TOTAL</div><div class="resumo-valor">${moeda(total)}</div></div><div class="resumo-item"><div class="resumo-label">GASTEI</div><div class="resumo-valor">${moeda(comprado)}</div></div><div class="resumo-item"><div class="resumo-label">FALTA</div><div class="resumo-valor">${moeda(total-comprado)}</div></div><div class="resumo-item"><div class="resumo-label">ECONOMIA</div><div class="resumo-valor">${moeda(economia)}</div></div></div>`;
+    for(let cat in catA){html+=`<div class="categoria"><h2>${getCatEmoji(cat)} ${cat}</h2>`;catA[cat].forEach(i=>{const u=i.unidade||'un';const q=formatQtd(i.quantidade,u);const t=i.quantidade*(i.precoFinal||i.preco);const d=i.desconto>0?' (-'+i.desconto+'%)':'';const info=i.preco>0?`<div class="item-info">${q} × R$ ${(i.preco).toFixed(2)}${u==='kg'?'/kg':'/un'}${d}</div><div class="item-total">${moeda(t)}</div>`:`<div class="sem-preco">${q} · sem preço</div>`;html+=`<div class="item ${i.comprado?'done':''}"><div class="check ${i.comprado?'checked':''}">${i.comprado?'✓':''}</div><div class="item-nome">${i.nome}</div>${info}</div>`});html+=`</div>`}
+    if(!Object.keys(catA).length)html+=`<div style="text-align:center;padding:40px;color:#9ca3af">Lista vazia</div>`;
+    html+=`<div class="footer">Mercado App${m?' · 🏪 '+m:''} · ${data}</div></body></html>`;
+    const w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(()=>w.print(),500);toast('📄 PDF!');fecharModal('modalExportar')}
+
+function exportCSV(){const m=getMercadoTexto();let csv='Mercado,Nome,Categoria,Qtd,Unidade,Preço,Desconto,Total,Comprado\n';itens.forEach(i=>{csv+=`"${m}","${i.nome}","${i.categoria}",${i.quantidade},${i.unidade||'un'},${(i.preco||0).toFixed(2)},${i.desconto||0}%,${(i.quantidade*(i.precoFinal||i.preco)).toFixed(2)},${i.comprado?'Sim':'Não'}\n`});baixar(csv,'mercado-'+Date.now()+'.csv','text/csv');toast('📋!');fecharModal('modalExportar')}
+
+function exportJSON(){baixar(JSON.stringify({mercado,itens,lembretes,compartilhadas,categorias},null,2),'mercado-'+Date.now()+'.json','application/json');toast('📥!');fecharModal('modalExportar')}
+
+function importJSON(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{try{const d=JSON.parse(e.target.result);itens=d.itens||[];lembretes=d.lembretes||[];compartilhadas=d.compartilhadas||[];if(d.categorias){categorias=d.categorias;salvarCategorias();atualizarSelects()}if(d.mercado){mercado=d.mercado;salvarMercadoStorage();atualizarMercadoUI()}itens.forEach(i=>{if(!i.unidade)i.unidade='un'});salvar();render();renderLembretes();renderCompartilhadas();renderCatList();toast('📤!');fecharModal('modalExportar')}catch(err){toast('Erro: '+err.message,'err')}};reader.readAsText(file)}
+
+function imprimirLista(){exportPDF()}
+
+// CÁLCULOS
+function calcular(){const total=itens.reduce((s,i)=>s+i.quantidade*(i.precoFinal||i.preco),0);const comprado=itens.filter(i=>i.comprado).reduce((s,i)=>s+i.quantidade*(i.precoFinal||i.preco),0);const economia=itens.reduce((s,i)=>s+i.quantidade*i.preco*(i.desconto||0)/100,0);const pct=itens.length?Math.round(itens.filter(i=>i.comprado).length/itens.length*100):0;return{total,comprado,economia,pct}}
+
+// RENDER
+function render(){const{total,comprado,economia,pct}=calcular();document.getElementById('vTotal').textContent=moeda(total);document.getElementById('vComp').textContent=moeda(comprado);document.getElementById('vQtd').textContent=itens.length;document.getElementById('vEcon').textContent=moeda(economia);document.getElementById('prog').style.width=pct+'%';const allCats=['Todos',...getCatNomes()];document.getElementById('filtros').innerHTML=allCats.map(c=>`<button class="btn ghost sm ${filtro===c?'on':''}" onclick="filtro='${c}';render()">${c==='Todos'?'Todos':getCatEmoji(c)+' '+c}</button>`).join('');const vis=filtro==='Todos'?itens:itens.filter(i=>i.categoria===filtro);const el=document.getElementById('listaEl');if(!vis.length){el.innerHTML=`<div class="empty"><div class="empty-icon">📝</div>${filtro==='Todos'?'Lista vazia':'Nenhum item'}</div>`}else{el.innerHTML=vis.map(i=>{const t=i.quantidade*(i.precoFinal||i.preco);const d=i.desconto>0?` <span style="color:var(--P)">-${i.desconto}%</span>`:'';const u=i.unidade||'un';const semPreco=!i.preco||i.preco===0;const metaHtml=semPreco?`<span class="i-sem-preco">⚠️ Sem preço — ✏️</span>`:`<span>${formatQtd(i.quantidade,u)} · R$ ${(i.preco||0).toFixed(2)}${u==='kg'?'/kg':'/un'}${d}</span><span class="i-total">Total: ${moeda(t)}</span>`;return`<div class="item ${i.comprado?'done':''}"><input type="checkbox" ${i.comprado?'checked':''} onchange="toggleItem(${i.id})"><div class="i-body"><div class="i-name">${getCatEmoji(i.categoria)} ${esc(i.nome)}</div><div class="i-meta">${metaHtml}</div></div><div class="i-actions"><button class="btn edit" onclick="abrirEdicao(${i.id})">✏️</button><button class="btn del" onclick="pedirRemover(${i.id})">🗑️</button></div></div>`}).join('')}renderGraficos();renderRelatorio(total,comprado,economia,pct);renderIA(total,economia,pct)}
+
+// GRÁFICOS
+function renderGraficos(){const catG={};itens.forEach(i=>{catG[i.categoria]=(catG[i.categoria]||0)+i.quantidade*(i.precoFinal||i.preco)});const labels=Object.keys(catG),values=Object.values(catG);const cores=['#16a34a','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#10b981','#14b8a6','#a855f7','#f43f5e','#84cc16'];if(charts.cat)charts.cat.destroy();const c1=document.getElementById('chCat');if(c1&&labels.length){charts.cat=new Chart(c1,{type:'doughnut',data:{labels:labels.map(l=>getCatEmoji(l)+' '+l),datasets:[{data:values,backgroundColor:cores.slice(0,labels.length),borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}})}const comp=itens.filter(i=>i.comprado).length,ncomp=itens.length-comp;if(charts.prog)charts.prog.destroy();const c2=document.getElementById('chProg');if(c2){charts.prog=new Chart(c2,{type:'bar',data:{labels:['Comprados','Falta'],datasets:[{data:[comp,ncomp],backgroundColor:['#16a34a','#f59e0b'],borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',scales:{x:{beginAtZero:true}}}})}const{total,comprado:tc}=calcular();if(charts.stat)charts.stat.destroy();const c3=document.getElementById('chStat');if(c3){charts.stat=new Chart(c3,{type:'pie',data:{labels:['Gastei','Falta'],datasets:[{data:[tc,total-tc],backgroundColor:['#16a34a','#fbbf24'],borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}})}}
+
+// RELATÓRIO
+function renderRelatorio(total,comprado,economia,pct){const semPreco=itens.filter(i=>!i.preco||i.preco===0).length;document.getElementById('statsCards').innerHTML=`<div class="stat"><div class="stat-lb">Itens</div><div class="stat-vl">${itens.length}</div></div><div class="stat"><div class="stat-lb">Total</div><div class="stat-vl">${moeda(total)}</div></div><div class="stat"><div class="stat-lb">Gastei</div><div class="stat-vl">${moeda(comprado)}</div></div><div class="stat"><div class="stat-lb">Falta</div><div class="stat-vl">${moeda(total-comprado)}</div></div><div class="stat"><div class="stat-lb">%</div><div class="stat-vl">${pct}%</div></div><div class="stat"><div class="stat-lb">Sem preço</div><div class="stat-vl" style="color:${semPreco>0?'#f59e0b':'var(--P)'}">${semPreco}</div></div>`;const catD={};itens.forEach(i=>{if(!catD[i.categoria])catD[i.categoria]={n:0,total:0,comp:0};catD[i.categoria].n++;const v=i.quantidade*(i.precoFinal||i.preco);catD[i.categoria].total+=v;if(i.comprado)catD[i.categoria].comp+=v});const entries=Object.entries(catD);document.getElementById('tblCat').innerHTML=entries.length?entries.map(([c,d])=>`<tr><td>${getCatEmoji(c)} ${c}</td><td>${d.n}</td><td>${moeda(d.total)}</td><td>${moeda(d.comp)}</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--TX3)">Sem dados</td></tr>'}
+
+// IA
+function renderIA(total,economia,pct){const el=document.getElementById('iaSug');let sug=[];const semPreco=itens.filter(i=>!i.preco||i.preco===0).length;if(!itens.length)sug.push('📝 Comece adicionando itens');else{if(!mercado.nome)sug.push('🏪 Defina o mercado no topo!');if(semPreco>0)sug.push('⚠️ '+semPreco+' sem preço — ✏️');const cats=[...new Set(itens.map(i=>i.categoria))];if(cats.includes('Carnes')&&!cats.includes('Hortifruti'))sug.push('🥗 Carnes sem hortifruti');if(pct>80)sug.push('🎉 Quase!');else if(pct>0)sug.push('📊 '+pct+'%');if(economia>0)sug.push('💰 '+moeda(economia)+'!');const catG={};itens.forEach(i=>{catG[i.categoria]=(catG[i.categoria]||0)+i.quantidade*(i.precoFinal||i.preco)});const mais=Object.entries(catG).sort((a,b)=>b[1]-a[1])[0];if(mais&&mais[1]>0)sug.push('📊 '+mais[0]+' mais cara ('+moeda(mais[1])+')');}el.innerHTML=sug.map(s=>`<div style="background:var(--BG2);padding:12px;border-radius:var(--R);margin-bottom:8px;border-left:4px solid var(--P);font-size:13px">${s}</div>`).join('')||'<p style="color:var(--TX3)">Sem sugestões</p>'}
+
+// CONFIG
+function mudarTema(cor){document.documentElement.style.setProperty('--P',cor);document.documentElement.style.setProperty('--PS',cor+'cc');localStorage.setItem('mercado_tema',cor);toast('🎨!')}
+function toggleDark(){const on=document.getElementById('chkDark').checked;document.body.classList.toggle('dark',on);localStorage.setItem('mercado_dark',on?'1':'')}
+function carregarConfig(){const tema=localStorage.getItem('mercado_tema');if(tema){document.documentElement.style.setProperty('--P',tema);document.documentElement.style.setProperty('--PS',tema+'cc');document.getElementById('selTema').value=tema}if(localStorage.getItem('mercado_dark')==='1'){document.body.classList.add('dark');document.getElementById('chkDark').checked=true}}
+
+// UTILITÁRIOS
+function moeda(v){return(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}
+function baixar(c,n,t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;a.click()}
+function toast(msg,tipo=''){const d=document.createElement('div');d.className='toast '+tipo;d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),4000)}
+function mudarTab(btn,id){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.pn').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.getElementById(id).classList.add('on')}
+function abrirModal(id){document.getElementById(id).classList.add('on');if(id==='modalCategorias'){renderEmojiPicker('emojiPicker','selecionarEmoji');renderCatList()}if(id==='modalMercado'){document.getElementById('inMercadoNome').value=mercado.nome||'';document.getElementById('inMercadoEnd').value=mercado.endereco||''}}
+function fecharModal(id){document.getElementById(id).classList.remove('on');if(id==='modalShare')document.getElementById('codeBox').style.display='none'}
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal'))e.target.classList.remove('on')});
+document.addEventListener('keypress',e=>{if(e.key==='Enter'&&document.activeElement.id==='inNome')addItem()});
+
+// INICIALIZAR
+carregarCategorias();carregar();carregarMercado();carregarConfig();atualizarSelects();render();renderLembretes();renderCompartilhadas();setInterval(verificarLembretes,60000);
+</script>
+</body>
+</html>
